@@ -89,6 +89,7 @@ WSGI_APPLICATION = "core.wsgi.application"
 GDAL_LIBRARY_PATH = "C:/OSGeo4W/bin/gdal313.dll"
 GEOS_LIBRARY_PATH = "C:/OSGeo4W/bin/geos_c.dll"
 
+AUTH_USER_MODEL = "account.User"
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
