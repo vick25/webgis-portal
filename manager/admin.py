@@ -7,7 +7,7 @@ from .models import Geoshp
 
 class GeoshpAdmin(admin.GISModelAdmin):
     date_hierarchy = "uploaded_date"
-    list_display = ("project", "name", "file", "uploaded_date")
+    list_display = ("project", "name", "name_db", "file", "uploaded_date")
     list_filter = ("project", "uploaded_date")
 
 

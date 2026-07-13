@@ -1,5 +1,5 @@
 from django.db import models
-import glob, os, shutil, tempfile, zipfile
+import glob, os, re, shutil, tempfile, zipfile
 from django.contrib import auth
 import geopandas as gpd
 from django.core.exceptions import ValidationError
@@ -16,6 +16,62 @@ conn_str = (
     f"{os.getenv('DB_PORT')}/"
     f"{os.getenv('DB_NAME')}"
 )
+
+
+def _normalize_table_name(name):
+    normalized = re.sub(r"[^a-zA-Z0-9_]", "_", name).strip("_").lower()
+    return normalized or "geoshp"
+
+
+# Persist the shapefile file as a postgis table
+def persist_file(file_path, table_name):
+    if not file_path.lower().endswith(".zip"):
+        raise ValidationError("Upload a ZIP shapefile.")
+
+    if not os.path.exists(file_path):
+        raise ValidationError("Uploaded file was not found.")
+
+    temp_dir = tempfile.mkdtemp()
+
+    try:
+        with zipfile.ZipFile(file_path, "r") as zip_ref:
+            zip_ref.extractall(temp_dir)
+
+        shp_files = glob.glob(
+            os.path.join(temp_dir, "**", "*.shp"),
+            recursive=True,
+        )
+
+        if not shp_files:
+            raise ValidationError("No shapefile found inside ZIP.")
+
+        shp_path = shp_files[0]
+
+        gdf = gpd.read_file(shp_path)
+
+        if gdf.crs is None:
+            gdf = gdf.set_crs(epsg=4326)
+
+        gdf = gdf.rename_geometry("geom")
+
+        table_name = _normalize_table_name(table_name)
+
+        engine = create_engine(conn_str)
+
+        gdf.to_postgis(
+            name=table_name,
+            con=engine,
+            schema="public",
+            if_exists="replace",
+            index=True,
+            dtype={"geom": Geometry("MULTIPOLYGON", srid=4326)},
+        )
+
+    except Exception as e:
+        raise ValidationError(f"Import failed: {e}")
+
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
 
 
 # Create your models here.
@@ -38,61 +94,19 @@ class Geoshp(models.Model):
         return f"{self.name}"
 
     def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
+        return super().save(*args, **kwargs)
 
-        # Validate the uploaded file
-        file_path = self.file.path
-
-        if not file_path.endswith(".zip"):
-            raise ValidationError("Upload a ZIP shapefile.")
-
-        temp_dir = tempfile.mkdtemp()
-
-        # Extract the shapefile and create a postgis table
-        try:
-            with zipfile.ZipFile(file_path, "r") as zip_ref:
-                zip_ref.extractall(temp_dir)
-
-            shp_files = glob.glob(
-                os.path.join(temp_dir, "**", "*.shp"),
-                recursive=True,
-            )
-
-            if not shp_files:
-                raise ValidationError("No shapefile found inside ZIP.")
-
-            shp_path = shp_files[0]
-
-            gdf = gpd.read_file(shp_path)
-
-            if gdf.crs is None:
-                gdf = gdf.set_crs(epsg=4326)
-
-            gdf = gdf.rename_geometry("geom")
-
-            table_name = self.name.lower().replace(" ", "_").replace("-", "_")
-
-            engine = create_engine(conn_str)
-
-            gdf.to_postgis(
-                name=table_name,
-                con=engine,
-                schema="public",
-                if_exists="replace",
-                index=True,
-                dtype={"geometry": Geometry("MULTIPOLYGON", srid=4326)},
-            )
-
-        except Exception as e:
-            raise ValidationError(f"Import failed: {e}")
-
-        finally:
-            shutil.rmtree(temp_dir, ignore_errors=True)
+    def name_db(self):
+        nameDb = _normalize_table_name(self.name)
+        return nameDb
 
 
 @receiver(post_save, sender=Geoshp)
 def publish_data(sender, instance, created, **kwargs):
-    print({"Geoshp": "********ok***********"})
+    if not instance.file:
+        return
+
+    persist_file(instance.file.path, instance.name)
 
 
 @receiver(post_delete, sender=Geoshp)
