@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Upload success</title>
+  </head>
+  <body>
+    <h2>Uploaded Documents</h2>
+    <ul>
+      {% for file in files %}
+      <li>
+        {{ file.name }} -
+        <a href="{{ file.file.url }}" target="_blank">Download</a>
+      </li>
+      {% empty %}
+      <li>No files uploaded yet.</li>
+      {% endfor %}
+    </ul>
+
+    <a href="{% url 'upload_file' %}">Upload another file</a>
+  </body>
+</html>
