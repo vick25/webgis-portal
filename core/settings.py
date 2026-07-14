@@ -51,7 +51,7 @@ DJANGO_APPS = [
     "django.contrib.gis",
 ]
 
-THIRD_PARTY_APPS = []
+THIRD_PARTY_APPS = ["leaflet", "djgeojson"]
 
 MY_APPS = ["account.apps.AccountConfig", "manager.apps.ManagerConfig"]
 

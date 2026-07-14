@@ -1,6 +1,6 @@
 from django.contrib.gis import admin
 
-from .models import Geoshp
+from .models import Geoshp, Project
 
 # Register your models here.
 
@@ -12,3 +12,19 @@ class GeoshpAdmin(admin.GISModelAdmin):
 
 
 admin.site.register(Geoshp, GeoshpAdmin)
+
+
+class ProjectAdmin(admin.ModelAdmin):
+    list_display = (
+        "name",
+        "sigle",
+        "description",
+        "creator__username",
+        "created_at",
+        "updated_at",
+    )
+    list_filter = ("creator__username", "created_at", "updated_at")
+    search_fields = ("name", "sigle")
+
+
+admin.site.register(Project, ProjectAdmin)

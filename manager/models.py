@@ -7,7 +7,8 @@ from geoalchemy2 import Geometry
 from sqlalchemy import create_engine
 from django.dispatch import receiver
 from django.db.models.signals import post_save, post_delete
-from pg.pg import Pg
+
+# from pg.pg import Pg
 
 conn_str = (
     f"postgresql+psycopg2://"
@@ -17,13 +18,13 @@ conn_str = (
     f"{os.getenv('DB_PORT')}/"
     f"{os.getenv('DB_NAME')}"
 )
-db = Pg(
-    dbname=f"{os.getenv('DB_NAME')}",
-    user=f"{os.getenv('DB_USER')}:",
-    password=f"{os.getenv('DB_PASSWORD')}",
-    host=f"{os.getenv('DB_HOST')}",
-    port=f"{os.getenv('DB_PORT')}",
-)
+# db = Pg(
+#     dbname=f"{os.getenv('DB_NAME')}",
+#     user=f"{os.getenv('DB_USER')}",
+#     password=f"{os.getenv('DB_PASSWORD')}",
+#     host=f"{os.getenv('DB_HOST')}",
+#     port=f"{os.getenv('DB_PORT')}",
+# )
 
 
 def _normalize_table_name(name):
@@ -119,7 +120,8 @@ def publish_data(sender, instance, created, **kwargs):
 
 @receiver(post_delete, sender=Geoshp)
 def delete_data(sender, instance, **kwargs):
-    db.delete_table(instance.name, schema="public")
+    pass
+    # db.delete_table(instance.name, schema="public")
     # geo.delete_layer(instance.name, "wwfdb")
 
 

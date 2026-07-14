@@ -2,6 +2,8 @@ asgiref==3.11.1
 certifi==2026.6.17
 Django==6.0.7
 django-environ==0.14.0
+django-geojson==4.2.0
+django-leaflet==0.33.0
 GeoAlchemy2==0.20.0
 geopandas==1.1.4
 greenlet==3.5.3
