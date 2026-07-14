@@ -7,6 +7,7 @@ from geoalchemy2 import Geometry
 from sqlalchemy import create_engine
 from django.dispatch import receiver
 from django.db.models.signals import post_save, post_delete
+from pg.pg import Pg
 
 conn_str = (
     f"postgresql+psycopg2://"
@@ -15,6 +16,13 @@ conn_str = (
     f"{os.getenv('DB_HOST')}:"
     f"{os.getenv('DB_PORT')}/"
     f"{os.getenv('DB_NAME')}"
+)
+db = Pg(
+    dbname=f"{os.getenv('DB_NAME')}",
+    user=f"{os.getenv('DB_USER')}:",
+    password=f"{os.getenv('DB_PASSWORD')}",
+    host=f"{os.getenv('DB_HOST')}",
+    port=f"{os.getenv('DB_PORT')}",
 )
 
 
@@ -81,7 +89,7 @@ class Geoshp(models.Model):
     )
     description = models.TextField(blank=True, help_text="Description of the shapefile")
     file = models.FileField(
-        upload_to="shapefiles/%Y/%m/%d", help_text="Upload a ZIP shapefile"
+        unique=True, upload_to="shapefiles/%Y/%m/%d", help_text="Upload a ZIP shapefile"
     )
     uploaded_date = models.DateField(
         auto_now_add=True, verbose_name="Date the ZIP file was uploaded."
@@ -111,8 +119,7 @@ def publish_data(sender, instance, created, **kwargs):
 
 @receiver(post_delete, sender=Geoshp)
 def delete_data(sender, instance, **kwargs):
-    pass
-    # db.delete_table(instance.name, schema='public')
+    db.delete_table(instance.name, schema="public")
     # geo.delete_layer(instance.name, "wwfdb")
 
 
@@ -123,3 +130,8 @@ class Project(models.Model):
     )
     description = models.TextField(blank=True, help_text="Description of the project")
     creator = models.ForeignKey(auth.get_user_model(), on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.name}"
