@@ -2,6 +2,10 @@ from django.shortcuts import render, redirect
 from .forms import GeoshpForm
 
 
+def index(request):
+    return render(request, "manager/index.html")
+
+
 def upload_shp(request):
     if request.method == "POST":
         form = GeoshpForm(request.POST, request.FILES)
@@ -11,18 +15,6 @@ def upload_shp(request):
     else:
         form = GeoshpForm()
     return render(request, "manager/uploadShp.html", {"form": form})
-
-    form = GeoshpForm(request.GET)
-
-    if form.is_valid() and form.cleaned_data["file_input"]:
-        file_input = form.cleaned_data["file_input"]
-        uploadedFile = request.FILES["file_input"]
-
-    return render(
-        request,
-        "manager/uploadShp.html",
-        {"form": form},
-    )
 
 
 def file_list(request):

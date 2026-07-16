@@ -72,7 +72,7 @@ ROOT_URLCONF = "core.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [os.path.join(BASE_DIR, "templates")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -130,7 +130,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "Africa/Kinshasa"
 
 USE_I18N = True
 
@@ -144,3 +144,14 @@ STATIC_URL = "static/"
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
+LEAFLET_CONFIG = {
+    # "SPATIAL_EXTENT": (5.0, 44.0, 7.5, 46),
+    "DEFAULT_CENTER": (-3.87, 22),
+    "DEFAULT_ZOOM": 4,
+    "MIN_ZOOM": 1,
+    "MAX_ZOOM": 20,
+    "SCALE": "both",
+    "RESET_VIEW": False,
+    "ATTRIBUTION_PREFIX": "WWF Map",
+}

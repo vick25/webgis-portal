@@ -109,6 +109,10 @@ class Geoshp(models.Model):
         nameDb = _normalize_table_name(self.name)
         return nameDb
 
+    @property
+    def namedb(self):
+        return _normalize_table_name(self.name)
+
 
 @receiver(post_save, sender=Geoshp)
 def publish_data(sender, instance, created, **kwargs):
