@@ -3,25 +3,16 @@ from .models import Geoshp, Project, ShapefileFeature
 from leaflet.admin import LeafletGeoAdmin
 
 
-class GeoshpAdmin(LeafletGeoAdmin):
-    date_hierarchy = "uploaded_date"
-    list_display = ("name", "project", "file", "uploaded_date")
-    list_filter = ("project", "uploaded_date")
-
-
-admin.site.register(Geoshp, GeoshpAdmin)
-
-
 class ProjectAdmin(admin.ModelAdmin):
     list_display = (
         "name",
         "sigle",
         "description",
-        "creator__username",
+        "creator",
         "created_at",
         "updated_at",
     )
-    list_filter = ("creator__username", "created_at", "updated_at")
+    list_filter = ("creator", "created_at", "updated_at")
     search_fields = ("name", "sigle")
 
 
@@ -30,26 +21,28 @@ admin.site.register(Project, ProjectAdmin)
 
 class FeatureInline(admin.TabularInline):
     model = ShapefileFeature
-    # Limit fields shown in inline view to prevent slow page loads with massive layers
     fields = ("geom", "properties")
     readonly_fields = ("geom", "properties")
     extra = 0
     can_delete = True
 
 
-@admin.register(Layer)
-class LayerAdmin(admin.ModelAdmin):
-    list_display = ("name", "geom_type", "uploaded_at")
+class GeoshpAdmin(LeafletGeoAdmin):
+    date_hierarchy = "uploaded_date"
+    list_display = ("name", "project", "file", "uploaded_date")
+    list_filter = ("project", "uploaded_date")
     search_fields = ("name",)
-    inlines = [FeatureInline]
+    inlines = [FeatureInline]  # Inlines nested perfectly under Leaflet view
+
+
+admin.site.register(Geoshp, GeoshpAdmin)
 
 
 @admin.register(ShapefileFeature)
-class FeatureAdmin(admin.GISModelAdmin):
+class FeatureAdmin(LeafletGeoAdmin):
     list_display = ("id", "geoshp", "get_properties_summary")
     list_filter = ("geoshp",)
 
-    # Show openstreetmap interface to inspect geometries in detail
     gis_widget_kwargs = {
         "attrs": {
             "default_zoom": 12,
@@ -58,12 +51,9 @@ class FeatureAdmin(admin.GISModelAdmin):
         }
     }
 
-    # Custom helper to show a snippet of the JSON properties in the list view
+    # Custom helper to safely truncate dynamic JSON properties in the grid view
     def get_properties_summary(self, obj):
-        return (
-            str(obj.properties)[:100] + "..."
-            if len(str(obj.properties)) > 100
-            else str(obj.properties)
-        )
+        props_str = str(obj.properties)
+        return props_str[:100] + "..." if len(props_str) > 100 else props_str
 
     get_properties_summary.short_description = "Attributes"
