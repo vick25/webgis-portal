@@ -13,10 +13,32 @@
   crossorigin=""
 ></script>
 {% endblock %} {% block content %}
-<h1>Manager Dashboard</h1>
-<p>Welcome to the manager dashboard!</p>
-<div id="map" class="map"></div>
+<section class="map-container">
+  <h1>Manager Dashboard</h1>
+  <p>Welcome to the manager dashboard!</p>
+  <div id="map" class="map"></div>
 
+  <aside class="left-panel closed">
+    <div class="panel-header">
+      <div class="panel-header-left">
+        <span class="panel-header-title">Données</span>
+      </div>
+    </div>
+    <div class="panel-scroll">Data</div>
+  </aside>
+
+  <button
+    type="button"
+    class="panel-toggle"
+    aria-expanded="false"
+    aria-label="Ouvrir le panneau"
+  >
+    <span>Projets</span
+    ><svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="currentColor" d="M9 5l7 7-7 7"></path>
+    </svg>
+  </button>
+</section>
 <script>
   var map = L.map("map").setView([-3.47, 23.177], 5);
 

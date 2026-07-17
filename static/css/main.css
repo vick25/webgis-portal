@@ -22,3 +22,59 @@ body {
   width: 100%;
   height: 100vh;
 }
+
+.panel-toggle {
+  position: absolute;
+  top: 5.75rem;
+  left: 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(16, 32, 30, 0.25);
+  background: #fff;
+  padding: 0.35rem 1rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  box-shadow: 0 18px 30px #10201e33;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  transition:
+    opacity 0.3s ease,
+    visibility 0.3s ease;
+  z-index: 1000;
+}
+
+.map-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  padding: 0;
+}
+
+.left-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 300px;
+  min-height: 0;
+  background: linear-gradient(to left, #fff, #f0f2f0f2);
+  border-radius: 12px;
+  border: 1px solid rgba(16, 32, 30, 0.15);
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  transition:
+    transform 0.35s ease,
+    opacity 0.35s ease;
+  overflow: hidden;
+}
+
+.left-panel.closed {
+  transform: translate(-110%);
+  opacity: 0;
+  pointer-events: none;
+}
