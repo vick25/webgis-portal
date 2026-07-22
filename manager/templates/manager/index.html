@@ -1,4 +1,6 @@
-{% extends "base.html" %} {% block title %}Manager Dashboard{% endblock %}
+{% extends "base.html" %} {% load static %}
+<!--  -->
+{% block title %}Manager Map{%endblock %}
 <!--  -->
 {% block head %}
 <link
@@ -7,29 +9,67 @@
   integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
   crossorigin=""
 />
-<script
-  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-  crossorigin=""
-></script>
 {% endblock %} {% block content %}
 <section class="map-container">
-  <h1>Manager Dashboard</h1>
-  <p>Welcome to the manager dashboard!</p>
-  <div id="map" class="map"></div>
-
-  <aside class="left-panel closed">
+  <aside class="left-panel open">
     <div class="panel-header">
       <div class="panel-header-left">
         <span class="panel-header-title">Données</span>
       </div>
     </div>
-    <div class="panel-scroll">Data</div>
+    <div class="panel-scroll">
+      <div class="panel-content">
+        <h3>Liste des projets</h3>
+        <select>
+          <option value="">Sélectionner un projet</option>
+          {% for project in projects %}
+          <option value="{{ project.id }}">{{ project.name }}</option>
+          {% empty %}
+          <option>No projects available.</option>
+          {% endfor %}
+        </select>
+      </div>
+      {% comment %} List all shapefiles for the selected project as radio
+      buttons to show on the map {% endcomment %}
+      <div class="panel-content">
+        <h3>Liste des données</h3>
+        <ul>
+          {% for file in files %}
+          <li>
+            <input
+              type="radio"
+              name="shapefile"
+              value="{{ file.id }}"
+              id="file_{{ file.id }}"
+            />
+            <label for="file_{{ file.id }}">{{ file.name }}</label>
+          </li>
+          {% empty %}
+          <li>No files available.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+    <div class="panel-brand-row">
+      <a href="#" target="_blank" rel="noopener noreferrer" aria-label="WWF"
+        ><img
+          class="brand-logo panel-logo"
+          alt="WWF"
+          src="{% static 'images/wwf_logo.jpg' %}"
+          style="height: 60px; width: 60%" /></a
+      ><button
+        type="button"
+        class="panel-close panel-close-arrow"
+        aria-label="Fermer le panneau des indicateurs"
+      >
+        <span aria-hidden="true" style="color: red">‹</span>
+      </button>
+    </div>
   </aside>
 
   <button
     type="button"
-    class="panel-toggle"
+    class="panel-toggle closed"
     aria-expanded="false"
     aria-label="Ouvrir le panneau"
   >
@@ -38,13 +78,14 @@
       <path fill="currentColor" d="M9 5l7 7-7 7"></path>
     </svg>
   </button>
-</section>
-<script>
-  var map = L.map("map").setView([-3.47, 23.177], 5);
 
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution:
-      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-  }).addTo(map);
-</script>
+  <div id="map" class="map"></div>
+</section>
+<!-- Leaflet JS -->
+<script
+  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+  crossorigin=""
+></script>
+<script src="{% static 'js/map.js' %}"></script>
 {% endblock %}

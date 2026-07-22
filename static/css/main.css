@@ -20,12 +20,12 @@ body {
 
 .map {
   width: 100%;
-  height: 100vh;
+  height: 85vh;
 }
 
 .panel-toggle {
   position: absolute;
-  top: 5.75rem;
+  top: 0.5rem;
   left: 1rem;
   border-radius: 999px;
   border: 1px solid rgba(16, 32, 30, 0.25);
@@ -44,25 +44,35 @@ body {
   z-index: 1000;
 }
 
+.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.closed {
+  transform: translate(-110%);
+  opacity: 0;
+  pointer-events: none;
+}
+
 .map-container {
   position: relative;
-  width: 100%;
-  height: 100vh;
   overflow: hidden;
   padding: 0;
 }
 
 .left-panel {
   position: absolute;
-  top: 0;
-  left: 0;
+  top: 0.5rem;
+  left: 0.5rem;
   width: 300px;
   min-height: 0;
   background: linear-gradient(to left, #fff, #f0f2f0f2);
   border-radius: 12px;
   border: 1px solid rgba(16, 32, 30, 0.15);
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-  z-index: 15;
+  z-index: 1000;
   display: flex;
   flex-direction: column;
   backdrop-filter: blur(25px);
@@ -73,8 +83,59 @@ body {
   overflow: hidden;
 }
 
-.left-panel.closed {
-  transform: translate(-110%);
-  opacity: 0;
-  pointer-events: none;
+.panel-header {
+  margin-top: -19px;
+  width: 120%;
+  margin-left: -20px;
+  background: linear-gradient(180deg, #49655a, #5f7f74);
+  color: #fff;
+  padding: 10px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top-left-radius: 14px;
+  border-top-right-radius: 14px;
+}
+
+.panel-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.panel-brand-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.panel-close.panel-close-arrow {
+  background: transparent;
+  box-shadow: none;
+  width: auto;
+  height: auto;
+  padding: 0;
+}
+
+.panel-close {
+  border: none;
+  background: #fff;
+  width: 32px;
+  height: 32px;
+  border-radius: 12px;
+  box-shadow: 0 12px 25px #10201e33;
+  font-size: 1.1rem;
+  cursor: pointer;
+  color: #4b4d4b;
+}
+
+.panel-close.panel-close-arrow span {
+  font-size: 1.35rem;
+}
+
+.panel-close-arrow span {
+  font-size: 1.1rem;
+  line-height: 1;
 }
