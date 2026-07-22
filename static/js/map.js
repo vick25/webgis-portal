@@ -1,106 +1,130 @@
-var osm = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  attribution:
-    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-});
+(() => {
+  "use strict";
 
-var Esri_WorldImagery = L.tileLayer(
-  "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-  {
-    attribution:
-      "Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community",
-  },
-);
+  const map = L.map("map", { zoomControl: false }).setView([-3.47, 26.17], 4);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    attribution: "&copy; OpenStreetMap contributors",
+  }).addTo(map);
+  L.control.zoom({ position: "bottomright" }).addTo(map);
+  L.control.scale({ imperial: false }).addTo(map);
 
-var bounds = L.latLngBounds([
-  [7.176292, 37.941236],
-  [-15.126043, 6.607253],
-]);
+  const panel = document.querySelector("#layer-panel");
+  const openButton = document.querySelector("#panel-open");
+  const closeButton = document.querySelector("#panel-close");
+  const projectList = document.querySelector("#project-list");
+  const loadMoreButton = document.querySelector("#load-more");
+  const status = document.querySelector("#map-status");
+  let activeLayer = null;
+  let nextProjectsUrl = window.GIS_API.projects;
 
-var map = L.map("map", {
-  zoomControl: false,
-  layers: [osm],
-  minZoom: 4,
-  maxBounds: bounds,
-  maxBoundsViscosity: 1.0,
-}).setView([-3.47, 26.177], 5);
-
-var baseMaps = {
-  OpenStreetMap: osm,
-  "World Imagery": Esri_WorldImagery,
-};
-
-var layerControl = L.control
-  .layers(baseMaps, null, {
-    collapsed: false,
-  })
-  .addTo(map);
-
-var scale = L.control
-  .scale({
-    metric: true,
-    imperial: false,
-  })
-  .addTo(map);
-L.control.zoom({ position: "bottomright" }).addTo(map);
-
-function renderProperties(properties) {
-  // Convert object to key-value pairs and map over them
-  const rowsHtml = Object.entries(properties)
-    .map(([key, value]) => {
-      // Optional: Format key/value into something cleaner
-      const cleanKey = key.replace(/_/g, " ");
-      const cleanValue =
-        typeof value === "number" ? value.toLocaleString() : value;
-
-      return `
-        <tr>
-          <td><strong>${cleanKey}</strong></td>
-          <td>${cleanValue ?? "N/A"}</td>
-        </tr>
-      `;
-    })
-    .join("");
-
-  return `
-    <table class="properties-table">
-      <tbody>
-        ${rowsHtml}
-      </tbody>
-    </table>
-  `;
-}
-async function fetchData(url) {
-  const response = await fetch(url);
-
-  if (!response.ok) {
-    const message = `An error has occured: ${response.status}`;
-    throw new Error(message);
+  function setPanel(open) {
+    panel.classList.toggle("-translate-x-[calc(100%+2rem)]", !open);
+    openButton.classList.toggle("hidden", open);
+    openButton.classList.toggle("flex", !open);
+    openButton.setAttribute("aria-expanded", String(open));
+    window.setTimeout(() => map.invalidateSize(), 320);
   }
 
-  const data = await response.json();
-  return data.results;
-}
+  closeButton.addEventListener("click", () => setPanel(false));
+  openButton.addEventListener("click", () => setPanel(true));
 
-fetchData("").catch((error) => {
-  error.message; // 'An error has occurred: 404'
-});
+  function escapeHtml(value) {
+    return String(value ?? "—")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
 
-(async () => {
-  const shps_data = await fetchData("api/v1/features/");
+  function popupHtml(properties) {
+    const entries = Object.entries(properties || {});
+    if (!entries.length) return '<p class="text-sm">No attributes available.</p>';
+    return `<table class="attribute-table text-sm"><tbody>${entries.map(([key, value]) =>
+      `<tr><td>${escapeHtml(key.replace(/_/g, " "))}</td><td>${escapeHtml(
+        typeof value === "object" ? JSON.stringify(value) : value,
+      )}</td></tr>`,
+    ).join("")}</tbody></table>`;
+  }
 
-  const geojson = L.geoJSON(shps_data, {
-    style: function (feature) {
-      return { color: "blue", weight: 2, fillOpacity: 0.5 };
-    },
-    onEachFeature: function (feature, layer) {
-      feature.properties &&
-        layer.bindPopup(renderProperties(feature.properties.properties));
-    },
-    filter: function (feature, layer) {
-      // Filter features based on a specific property value
-      return (
-        feature.properties && feature.properties.geoshp === "Territoire_RDC" //'Territoire_RDC'
-      );
-    },
-  }).addTo(map);
+  function layerStyle(feature) {
+    return { color: "#047857", weight: 2, fillColor: "#34d399", fillOpacity: 0.28 };
+  }
+
+  function pointStyle(feature, latlng) {
+    return L.circleMarker(latlng, { radius: 7, color: "#065f46", weight: 2, fillColor: "#34d399", fillOpacity: 0.9 });
+  }
+
+  async function showLayer(input) {
+    const url = input.dataset.geojsonUrl;
+    const name = input.dataset.layerName;
+    status.textContent = `Loading ${name}…`;
+    document.querySelectorAll("input[name='gis-layer']").forEach((radio) => { radio.disabled = true; });
+    try {
+      const response = await fetch(url, { headers: { Accept: "application/geo+json, application/json" } });
+      if (!response.ok) throw new Error(`The server returned ${response.status}.`);
+      const geojson = await response.json();
+      if (activeLayer) map.removeLayer(activeLayer);
+      activeLayer = L.geoJSON(geojson, {
+        style: layerStyle,
+        pointToLayer: pointStyle,
+        onEachFeature(feature, leafletLayer) { leafletLayer.bindPopup(popupHtml(feature.properties)); },
+      }).addTo(map);
+      const bounds = activeLayer.getBounds();
+      if (bounds.isValid()) map.fitBounds(bounds, { padding: [32, 32], maxZoom: 15 });
+      status.textContent = `${geojson.features.length.toLocaleString()} features in ${name}`;
+    } catch (error) {
+      input.checked = false;
+      status.textContent = `Could not load ${name}: ${error.message}`;
+    } finally {
+      document.querySelectorAll("input[name='gis-layer']").forEach((radio) => { radio.disabled = false; });
+    }
+  }
+
+  function appendProject(project) {
+    const section = document.createElement("section");
+    section.className = "mb-2 overflow-hidden rounded-xl border border-slate-200 bg-white";
+    const layers = project.layers || [];
+    section.innerHTML = `
+      <div class="px-4 py-3">
+        <h2 class="text-sm font-semibold text-slate-800">${escapeHtml(project.name)}</h2>
+        <p class="mt-0.5 text-xs text-slate-500">${escapeHtml(project.sigle)} · ${layers.length} layer${layers.length === 1 ? "" : "s"}</p>
+      </div>
+      <div class="border-t border-slate-100 px-3 py-2">${layers.length ? "" : '<p class="px-1 py-2 text-xs text-slate-500">No layers in this project.</p>'}</div>`;
+    const layerContainer = section.lastElementChild;
+    layers.forEach((layer) => {
+      const label = document.createElement("label");
+      label.className = "flex cursor-pointer items-center gap-3 rounded-lg px-2 py-2 text-sm hover:bg-emerald-50";
+      label.innerHTML = `<input class="h-4 w-4 accent-emerald-700" type="radio" name="gis-layer" value="${layer.id}"><span class="min-w-0 flex-1 truncate text-slate-700">${escapeHtml(layer.name)}</span><span class="text-xs text-slate-400">${Number(layer.feature_count).toLocaleString()}</span>`;
+      const input = label.querySelector("input");
+      input.dataset.geojsonUrl = layer.geojson_url;
+      input.dataset.layerName = layer.name;
+      input.addEventListener("change", () => { if (input.checked) showLayer(input); });
+      layerContainer.appendChild(label);
+    });
+    projectList.appendChild(section);
+  }
+
+  async function loadProjects() {
+    if (!nextProjectsUrl) return;
+    loadMoreButton.disabled = true;
+    try {
+      const response = await fetch(nextProjectsUrl, { headers: { Accept: "application/json" } });
+      if (!response.ok) throw new Error(`The server returned ${response.status}.`);
+      const page = await response.json();
+      page.results.forEach(appendProject);
+      nextProjectsUrl = page.next;
+      loadMoreButton.classList.toggle("hidden", !nextProjectsUrl);
+      status.textContent = projectList.children.length ? "Choose a layer to begin." : "No projects available.";
+    } catch (error) {
+      projectList.innerHTML = `<p class="p-3 text-sm text-red-700">Could not load projects: ${escapeHtml(error.message)}</p>`;
+      status.textContent = "";
+    } finally {
+      loadMoreButton.disabled = false;
+    }
+  }
+
+  loadMoreButton.addEventListener("click", loadProjects);
+  loadProjects();
 })();

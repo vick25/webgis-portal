@@ -1,27 +1,60 @@
-from rest_framework_gis.serializers import GeoFeatureModelSerializer
-from manager.models import ShapefileFeature, Project, Geoshp
+import json
+
 from rest_framework import serializers
 
+from manager.models import Geoshp, Project, ShapefileFeature
 
-class ShapefileFeatureSerializer(GeoFeatureModelSerializer):
-    geoshp = serializers.StringRelatedField(source="geoshp.name", read_only=True)
+
+class LayerFeatureSerializer(serializers.ModelSerializer):
+    """Serialize a database feature as a standard GeoJSON Feature."""
 
     class Meta:
         model = ShapefileFeature
-        geo_field = "geom"
-        fields = ("geoshp", "geom", "properties")
-        id_field = False
+        fields = ("id", "geom", "properties")
 
-
-class ProjectSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Project
-        exclude = ("creator",)
+    def to_representation(self, instance):
+        # ``GeometryField.geojson`` returns a GeoJSON geometry and avoids the
+        # extra, nested ``properties`` member produced by generic serializers.
+        return {
+            "type": "Feature",
+            "id": instance.pk,
+            "geometry": json.loads(instance.geom.geojson) if instance.geom else None,
+            "properties": instance.properties or {},
+        }
 
 
 class GeoshpSerializer(serializers.ModelSerializer):
-    project = serializers.StringRelatedField()
+    """Small layer payload suitable for project and layer catalogues."""
+
+    feature_count = serializers.IntegerField(read_only=True)
+    geojson_url = serializers.HyperlinkedIdentityField(
+        view_name="layer-geojson", lookup_field="pk", read_only=True
+    )
 
     class Meta:
         model = Geoshp
-        fields = "__all__"
+        fields = (
+            "id",
+            "name",
+            "description",
+            "uploaded_date",
+            "project",
+            "feature_count",
+            "geojson_url",
+        )
+        read_only_fields = fields
+
+
+class ProjectSerializer(serializers.ModelSerializer):
+    """A project plus the layers that the map panel can render."""
+
+    layers = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Project
+        fields = ("id", "name", "sigle", "description", "created_at", "updated_at", "layers")
+        read_only_fields = fields
+
+    def get_layers(self, project):
+        layers = project.geoshp_layers.all()
+        return GeoshpSerializer(layers, many=True, context=self.context).data

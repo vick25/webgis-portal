@@ -1,5 +1,6 @@
 from django.contrib.gis.db import models
-import glob, os, re, shutil, tempfile, zipfile
+import os, re, shutil, tempfile, zipfile
+from pathlib import Path, PurePosixPath
 from django.contrib import auth
 import geopandas as gpd
 from django.core.exceptions import ValidationError
@@ -22,6 +23,35 @@ def _normalize_table_name(name):
     return normalized or "geoshp"
 
 
+def extract_single_shapefile(zip_path, destination):
+    """Safely unpack one conventional shapefile set and return its .shp path.
+
+    Uploads are user-controlled, so zip member names must be checked before
+    extraction to prevent a path-traversal archive from writing outside the
+    temporary import directory.
+    """
+    destination = Path(destination).resolve()
+    with zipfile.ZipFile(zip_path, "r") as archive:
+        for member in archive.infolist():
+            member_path = PurePosixPath(member.filename)
+            if member_path.is_absolute() or ".." in member_path.parts:
+                raise ValidationError("ZIP contains an unsafe file path.")
+            target = (destination / Path(*member_path.parts)).resolve()
+            if not str(target).startswith(str(destination) + os.sep) and target != destination:
+                raise ValidationError("ZIP contains an unsafe file path.")
+        archive.extractall(destination)
+
+    shp_files = list(destination.rglob("*.shp"))
+    if len(shp_files) != 1:
+        raise ValidationError("ZIP must contain exactly one .shp file.")
+
+    shp_path = shp_files[0]
+    missing = [suffix for suffix in (".dbf", ".shx") if not shp_path.with_suffix(suffix).exists()]
+    if missing:
+        raise ValidationError(f"Shapefile is missing required companion file(s): {', '.join(missing)}.")
+    return str(shp_path)
+
+
 # Persist the shapefile file as a postgis table
 def persist_file(geoshp_instance):
     file_path = geoshp_instance.file.path
@@ -35,18 +65,7 @@ def persist_file(geoshp_instance):
     temp_dir = tempfile.mkdtemp()
 
     try:
-        with zipfile.ZipFile(file_path, "r") as zip_ref:
-            zip_ref.extractall(temp_dir)
-
-        shp_files = glob.glob(
-            os.path.join(temp_dir, "**", "*.shp"),
-            recursive=True,
-        )
-
-        if not shp_files:
-            raise ValidationError("No shapefile found inside ZIP.")
-
-        shp_path = shp_files[0]
+        shp_path = extract_single_shapefile(file_path, temp_dir)
 
         # Read shapefile with geopandas
         gdf = gpd.read_file(shp_path)
@@ -107,7 +126,11 @@ class Geoshp(models.Model):
     )
     uploaded_date = models.DateField(auto_now_add=True)
     project = models.ForeignKey(
-        "Project", on_delete=models.SET_NULL, null=True, blank=True
+        "Project",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="geoshp_layers",
     )
 
     def __str__(self):

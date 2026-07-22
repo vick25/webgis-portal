@@ -1,91 +1,64 @@
-{% extends "base.html" %} {% load static %}
-<!--  -->
-{% block title %}Manager Map{%endblock %}
-<!--  -->
-{% block head %}
-<link
-  rel="stylesheet"
-  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-  crossorigin=""
-/>
-{% endblock %} {% block content %}
-<section class="map-container">
-  <aside class="left-panel open">
-    <div class="panel-header">
-      <div class="panel-header-left">
-        <span class="panel-header-title">Données</span>
-      </div>
-    </div>
-    <div class="panel-scroll">
-      <div class="panel-content">
-        <h3>Liste des projets</h3>
-        <select>
-          <option value="">Sélectionner un projet</option>
-          {% for project in projects %}
-          <option value="{{ project.id }}">{{ project.name }}</option>
-          {% empty %}
-          <option>No projects available.</option>
-          {% endfor %}
-        </select>
-      </div>
-      {% comment %} List all shapefiles for the selected project as radio
-      buttons to show on the map {% endcomment %}
-      <div class="panel-content">
-        <h3>Liste des données</h3>
-        <ul>
-          {% for file in files %}
-          <li>
-            <input
-              type="radio"
-              name="shapefile"
-              value="{{ file.id }}"
-              id="file_{{ file.id }}"
-            />
-            <label for="file_{{ file.id }}">{{ file.name }}</label>
-          </li>
-          {% empty %}
-          <li>No files available.</li>
-          {% endfor %}
-        </ul>
-      </div>
-    </div>
-    <div class="panel-brand-row">
-      <a href="#" target="_blank" rel="noopener noreferrer" aria-label="WWF"
-        ><img
-          class="brand-logo panel-logo"
-          alt="WWF"
-          src="{% static 'images/wwf_logo.jpg' %}"
-          style="height: 60px; width: 60%" /></a
-      ><button
-        type="button"
-        class="panel-close panel-close-arrow"
-        aria-label="Fermer le panneau des indicateurs"
-      >
-        <span aria-hidden="true" style="color: red">‹</span>
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WWF GIS | Map</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+    <style>
+      html, body, #map { height: 100%; margin: 0; }
+      .leaflet-popup-content { max-height: 260px; overflow: auto; }
+      .attribute-table td { padding: .32rem .45rem; vertical-align: top; border-bottom: 1px solid #e5e7eb; }
+      .attribute-table td:first-child { color: #4b5563; font-weight: 600; white-space: nowrap; }
+    </style>
+  </head>
+  <body class="overflow-hidden bg-slate-100 text-slate-900">
+    <main class="relative h-screen w-screen">
+      <div id="map" aria-label="Interactive project map"></div>
+
+      <aside id="layer-panel" class="absolute left-4 top-4 z-[1000] flex max-h-[calc(100vh-2rem)] w-[min(23rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-white/70 bg-white/95 shadow-2xl backdrop-blur transition-transform duration-300" aria-label="Project layers">
+        <header class="flex items-center justify-between bg-emerald-800 px-5 py-4 text-white">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-[.16em] text-emerald-200">WWF GIS</p>
+            <h1 class="mt-0.5 text-lg font-semibold">Project layers</h1>
+          </div>
+          <button id="panel-close" type="button" class="rounded-lg p-2 text-emerald-100 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white" aria-label="Hide project layers">✕</button>
+        </header>
+        <div class="border-b border-slate-100 px-5 py-3 text-sm text-slate-500">
+          Select a layer to view it on the map.
+        </div>
+        <div id="project-list" class="min-h-24 flex-1 overflow-y-auto p-3" aria-live="polite">
+          <p class="p-3 text-sm text-slate-500">Loading projects…</p>
+        </div>
+        <div class="border-t border-slate-100 p-3">
+          <button id="load-more" type="button" class="hidden w-full rounded-lg border border-emerald-700 px-3 py-2 text-sm font-semibold text-emerald-800 hover:bg-emerald-50">Load more projects</button>
+          <p id="map-status" class="px-2 text-xs text-slate-500" role="status"></p>
+        </div>
+      </aside>
+
+      <button id="panel-open" type="button" class="absolute left-4 top-4 z-[1000] hidden items-center gap-2 rounded-xl bg-emerald-800 px-4 py-3 text-sm font-semibold text-white shadow-lg hover:bg-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2" aria-expanded="false" aria-controls="layer-panel">
+        <span aria-hidden="true">☰</span> Layers
       </button>
-    </div>
-  </aside>
+    </main>
 
-  <button
-    type="button"
-    class="panel-toggle closed"
-    aria-expanded="false"
-    aria-label="Ouvrir le panneau"
-  >
-    <span>Projets</span
-    ><svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true">
-      <path fill="currentColor" d="M9 5l7 7-7 7"></path>
-    </svg>
-  </button>
-
-  <div id="map" class="map"></div>
-</section>
-<!-- Leaflet JS -->
-<script
-  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-  crossorigin=""
-></script>
-<script src="{% static 'js/map.js' %}"></script>
-{% endblock %}
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+    <script>
+      window.GIS_API = {
+        projects: "{% url 'project-list' %}",
+        unassignedLayers: "{% url 'layer-list' %}?unassigned=true",
+      };
+    </script>
+    <script src="{% static 'js/map.js' %}"></script>
+  </body>
+</html>
