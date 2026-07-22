@@ -1,9 +1,13 @@
 from django.shortcuts import render, redirect
 from .forms import GeoshpForm
+from .models import Project, ShapefileFeature
 
 
 def index(request):
-    return render(request, "manager/index.html")
+    projects = Project.objects.all()
+    shps = list(ShapefileFeature.objects.values("geom", "properties"))
+    context = {"projects": projects, "shps": shps}
+    return render(request, "manager/index.html", context)
 
 
 def upload_shp(request):

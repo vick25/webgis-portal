@@ -56,6 +56,7 @@ THIRD_PARTY_APPS = [
     "djgeojson",
     "rest_framework",
     "rest_framework_gis",
+    "django_filters",
 ]
 
 MY_APPS = [
@@ -166,4 +167,10 @@ LEAFLET_CONFIG = {
     "SCALE": "both",
     "RESET_VIEW": False,
     "ATTRIBUTION_PREFIX": "WWF Map",
+}
+
+REST_FRAMEWORK = {
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 10,
+    "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",),
 }

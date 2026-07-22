@@ -54,6 +54,6 @@ class FeatureAdmin(LeafletGeoAdmin):
     # Custom helper to safely truncate dynamic JSON properties in the grid view
     def get_properties_summary(self, obj):
         props_str = str(obj.properties)
-        return props_str[:100] + "..." if len(props_str) > 100 else props_str
+        return props_str[:5] + "..." if len(props_str) > 5 else props_str
 
     get_properties_summary.short_description = "Attributes"
