@@ -4,8 +4,15 @@ from .models import Project
 
 
 def index(request):
-    # The map obtains its paginated catalogue and selected GeoJSON lazily from
-    # the API; keeping this view lean makes first paint fast.
+    return render(request, "manager/home.html")
+
+
+def dashboard(request):
+    return render(request, "manager/dashboard.html")
+
+
+def map_view(request):
+    # The map obtains its catalogue and selected GeoJSON lazily from the API.
     return render(request, "manager/index.html")
 
 
