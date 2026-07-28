@@ -1,23 +1,19 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Upload success</title>
-  </head>
-  <body>
-    <h2>Uploaded Documents</h2>
-    <ul>
+{% extends "base.html" %}
+
+{% block title %}WWF GIS | Dataset records{% endblock %}
+
+{% block content %}
+  <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
+    <div><p class="text-sm font-semibold uppercase tracking-[.16em] text-emerald-700">Dataset management</p><h1 class="mt-1 text-3xl font-bold">Uploaded records</h1></div>
+    <a class="rounded-lg bg-emerald-800 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-900" href="{% url 'upload_shp' %}">Upload dataset</a>
+  </div>
+  <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <ul class="divide-y divide-slate-100">
       {% for file in files %}
-      <li>
-        {{ file.name }} -
-        <a href="{{ file.file.url }}" target="_blank">Download</a>
-      </li>
+        <li class="flex flex-wrap items-center justify-between gap-3 px-5 py-4"><div><p class="font-semibold text-slate-800">{{ file.name }}</p><p class="mt-1 text-sm text-slate-500">{{ file.description|default:"No description" }}</p></div><a class="text-sm font-semibold text-emerald-800 hover:underline" href="{{ file.file.url }}" target="_blank" rel="noopener">Download</a></li>
       {% empty %}
-      <li>No files uploaded yet.</li>
+        <li class="px-5 py-10 text-center text-slate-500">No datasets have been uploaded yet.</li>
       {% endfor %}
     </ul>
-
-    <a href="{% url 'upload_shp' %}">Upload another shapefile</a>
-  </body>
-</html>
+  </section>
+{% endblock %}

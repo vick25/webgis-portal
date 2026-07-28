@@ -1,64 +1,36 @@
+{% extends "base.html" %}
 {% load static %}
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>WWF GIS | Map</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link
-      rel="stylesheet"
-      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-      crossorigin=""
-    />
-    <style>
-      html, body, #map { height: 100%; margin: 0; }
-      .leaflet-popup-content { max-height: 260px; overflow: auto; }
-      .attribute-table td { padding: .32rem .45rem; vertical-align: top; border-bottom: 1px solid #e5e7eb; }
-      .attribute-table td:first-child { color: #4b5563; font-weight: 600; white-space: nowrap; }
-    </style>
-  </head>
-  <body class="overflow-hidden bg-slate-100 text-slate-900">
-    <main class="relative h-screen w-screen">
-      <div id="map" aria-label="Interactive project map"></div>
 
-      <aside id="layer-panel" class="absolute left-4 top-4 z-[1000] flex max-h-[calc(100vh-2rem)] w-[min(23rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-white/70 bg-white/95 shadow-2xl backdrop-blur transition-transform duration-300" aria-label="Project layers">
-        <header class="flex items-center justify-between bg-emerald-800 px-5 py-4 text-white">
-          <div>
-            <p class="text-xs font-semibold uppercase tracking-[.16em] text-emerald-200">WWF GIS</p>
-            <h1 class="mt-0.5 text-lg font-semibold">Project layers</h1>
-          </div>
-          <button id="panel-close" type="button" class="rounded-lg p-2 text-emerald-100 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white" aria-label="Hide project layers">✕</button>
-        </header>
-        <div class="border-b border-slate-100 px-5 py-3 text-sm text-slate-500">
-          Select a layer to view it on the map.
-        </div>
-        <div id="project-list" class="min-h-24 flex-1 overflow-y-auto p-3" aria-live="polite">
-          <p class="p-3 text-sm text-slate-500">Loading projects…</p>
-        </div>
-        <div class="border-t border-slate-100 p-3">
-          <button id="load-more" type="button" class="hidden w-full rounded-lg border border-emerald-700 px-3 py-2 text-sm font-semibold text-emerald-800 hover:bg-emerald-50">Load more projects</button>
-          <p id="map-status" class="px-2 text-xs text-slate-500" role="status"></p>
-        </div>
-      </aside>
+{% block title %}WWF GIS | Map{% endblock %}
+{% block body_class %}overflow-hidden{% endblock %}
+{% block main_class %}h-[calc(100vh-4rem)] w-full p-0{% endblock %}
+{% block footer %}{% endblock %}
 
-      <button id="panel-open" type="button" class="absolute left-4 top-4 z-[1000] hidden items-center gap-2 rounded-xl bg-emerald-800 px-4 py-3 text-sm font-semibold text-white shadow-lg hover:bg-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2" aria-expanded="false" aria-controls="layer-panel">
-        <span aria-hidden="true">☰</span> Layers
-      </button>
-    </main>
+{% block head %}
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <style>
+    #map { height: 100%; width: 100%; }
+    .leaflet-popup-content { max-height: 260px; overflow: auto; }
+    .attribute-table td { padding: .32rem .45rem; vertical-align: top; border-bottom: 1px solid #e5e7eb; }
+    .attribute-table td:first-child { color: #4b5563; font-weight: 600; white-space: nowrap; }
+  </style>
+{% endblock %}
 
-    <script
-      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-      crossorigin=""
-    ></script>
-    <script>
-      window.GIS_API = {
-        projects: "{% url 'project-list' %}",
-        unassignedLayers: "{% url 'layer-list' %}?unassigned=true",
-      };
-    </script>
-    <script src="{% static 'js/map.js' %}"></script>
-  </body>
-</html>
+{% block content %}
+  <div class="relative h-full w-full">
+    <div id="map" aria-label="Interactive project map"></div>
+    <aside id="layer-panel" class="absolute left-4 top-4 z-[1000] flex max-h-[calc(100%-2rem)] w-[min(23rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-white/70 bg-white/95 shadow-2xl backdrop-blur transition-transform duration-300" aria-label="Project layers">
+      <header class="flex items-center justify-between bg-emerald-800 px-5 py-4 text-white"><div><p class="text-xs font-semibold uppercase tracking-[.16em] text-emerald-200">WWF GIS</p><h1 class="mt-0.5 text-lg font-semibold">Project layers</h1></div><button id="panel-close" type="button" class="rounded-lg p-2 text-emerald-100 hover:bg-white/10" aria-label="Hide project layers">✕</button></header>
+      <div class="border-b border-slate-100 px-5 py-3 text-sm text-slate-500">Use the checkboxes to add one or more project layers.</div>
+      <div id="project-list" class="min-h-24 flex-1 overflow-y-auto p-3" aria-live="polite"><p class="p-3 text-sm text-slate-500">Loading projects…</p></div>
+      <div class="border-t border-slate-100 p-3"><button id="load-more" type="button" class="hidden w-full rounded-lg border border-emerald-700 px-3 py-2 text-sm font-semibold text-emerald-800 hover:bg-emerald-50">Load more projects</button><p id="map-status" class="px-2 text-xs text-slate-500" role="status"></p></div>
+    </aside>
+    <button id="panel-open" type="button" class="absolute left-4 top-4 z-[1000] hidden items-center gap-2 rounded-xl bg-emerald-800 px-4 py-3 text-sm font-semibold text-white shadow-lg hover:bg-emerald-900" aria-expanded="false" aria-controls="layer-panel"><span aria-hidden="true">☰</span> Layers</button>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script>window.GIS_API = {projects: "{% url 'project-list' %}", unassignedLayers: "{% url 'layer-list' %}?unassigned=true"};</script>
+  <script src="{% static 'js/map.js' %}"></script>
+{% endblock %}

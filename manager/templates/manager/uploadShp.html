@@ -1,16 +1,19 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Upload Shapefile</title>
-  </head>
-  <body>
-    <h2>Upload a Shapefile</h2>
-    <form method="post" enctype="multipart/form-data">
-      {% csrf_token %} {{ form.as_p }}
-      <button type="submit">Upload</button>
+{% extends "base.html" %}
+
+{% block title %}WWF GIS | Upload dataset{% endblock %}
+
+{% block content %}
+  <section class="mx-auto max-w-2xl rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+    <p class="text-sm font-semibold uppercase tracking-[.16em] text-emerald-700">Dataset management</p>
+    <h1 class="mt-1 text-2xl font-bold">Upload a shapefile</h1>
+    <p class="mt-2 text-sm text-slate-600">Upload one ZIP archive containing the required shapefile files.</p>
+    <form class="mt-6 space-y-4" method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <div class="flex flex-wrap gap-3 pt-2">
+        <button class="rounded-lg bg-emerald-800 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-900" type="submit">Upload dataset</button>
+        <a class="rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50" href="{% url 'file_list' %}">View records</a>
+      </div>
     </form>
-    <a href="{% url 'file_list' %}">View Uploaded Files</a>
-  </body>
-</html>
+  </section>
+{% endblock %}
