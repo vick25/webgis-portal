@@ -11,7 +11,9 @@
       {% csrf_token %}
       {{ form.as_p }}
       <div class="flex flex-wrap gap-3 pt-2">
-        <button class="rounded-lg bg-emerald-800 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-900" type="submit">Upload dataset</button>
+        <button class="rounded-lg bg-emerald-800 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-900" type="submit">
+          Upload dataset
+        </button>
         <a class="rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50" href="{% url 'file_list' %}">View records</a>
       </div>
     </form>
