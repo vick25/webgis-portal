@@ -1,12 +1,14 @@
 from django.shortcuts import render, redirect
 from .forms import GeoshpForm
 from .models import Project
+from django.contrib.auth.decorators import login_required
 
 
 def index(request):
     return render(request, "manager/home.html")
 
 
+@login_required
 def dashboard(request):
     return render(request, "manager/dashboard.html")
 
@@ -16,6 +18,7 @@ def map_view(request):
     return render(request, "manager/index.html")
 
 
+@login_required
 def upload_shp(request):
     if request.method == "POST":
         form = GeoshpForm(request.POST, request.FILES)
@@ -27,6 +30,7 @@ def upload_shp(request):
     return render(request, "manager/uploadShp.html", {"form": form})
 
 
+@login_required
 def file_list(request):
     from .models import Geoshp
 

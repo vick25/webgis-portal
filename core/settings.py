@@ -174,3 +174,7 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 10,
     "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",),
 }
+
+LOGIN_URL = "login"
+LOGIN_REDIRECT_URL = "map_view"
+LOGOUT_REDIRECT_URL = "login"
