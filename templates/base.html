@@ -39,25 +39,31 @@
                 href="{% url 'manager_dashboard' %}"
                 >Dashboard</a>
             {% endif %}
-          <a
-            class="rounded-lg px-3 py-2 hover:bg-white/10"
-            href="{% url 'map_view' %}"
-            >Map</a>
+          <a class="rounded-lg px-3 py-2 hover:bg-white/10"
+            href="{% url 'map_view' %}">Map
+          </a>
             {% if user.is_authenticated %}
-            <span class="ml-1 rounded-lg bg-yellow-500 px-3 py-2 text-xs font-semibold text-yellow-50">{{ user.username|capfirst }}</span>
-            <a
-            class="ml-1 rounded-lg bg-white px-3 py-2 text-emerald-900 hover:bg-emerald-50"
-            href="{% url 'logout' %}"
-            >Logout</a>
+            <span class="ml-1 rounded-lg bg-yellow-500 px-3 py-2 text-xs font-semibold text-yellow-50">
+              <em>{{ user.username|capfirst }}</em>
+            </span>
+            <a class="ml-1 rounded-lg bg-white px-3 py-2 text-emerald-900 hover:bg-emerald-50"
+            href="{% url 'logout' %}">
+            Logout
+          </a>
             {% else %}
-            <a
-              class="ml-1 rounded-lg bg-white px-3 py-2 text-emerald-900 hover:bg-emerald-50"
+            <a class="ml-1 rounded-lg bg-white px-3 py-2 text-emerald-900 hover:bg-emerald-50"
               href="{% url 'login' %}?next={% url 'manager_dashboard' %}"
               >Login</a>
             {% endif %}
         </div>
       </nav>
     </header>
+    {% for message in messages %}
+      <p class="bg-{{ message.level_tag }}-100 text-{{ message.level_tag }}-800 p-4 mb-4 rounded-lg">
+        <em>{{ message.level_tag|title }}:</em>
+        {{ message }}
+      </p>
+    {% endfor %}
     <main
       class="{% block main_class %}mx-auto w-full max-w-screen-2xl px-4 py-6 sm:px-6{% endblock %}"
     >
