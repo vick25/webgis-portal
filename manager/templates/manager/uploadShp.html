@@ -9,12 +9,15 @@
     <p class="mt-2 text-sm text-slate-600">Upload one ZIP archive containing the required shapefile files.</p>
     <form class="mt-6 space-y-4" method="post" enctype="multipart/form-data">
       {% csrf_token %}
-      {{ form.as_p }}
+      {% comment %} <table>
+        {{ form.as_table }}
+      </table> {% endcomment %}
       <div class="flex flex-wrap gap-3 pt-2">
         <button class="rounded-lg bg-emerald-800 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-900" type="submit">
           Upload dataset
         </button>
-        <a class="rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50" href="{% url 'file_list' %}">View records</a>
+        <a class="rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+        href="{% url 'file_list' %}">View records</a>
       </div>
     </form>
   </section>

@@ -37,7 +37,10 @@ def extract_single_shapefile(zip_path, destination):
             if member_path.is_absolute() or ".." in member_path.parts:
                 raise ValidationError("ZIP contains an unsafe file path.")
             target = (destination / Path(*member_path.parts)).resolve()
-            if not str(target).startswith(str(destination) + os.sep) and target != destination:
+            if (
+                not str(target).startswith(str(destination) + os.sep)
+                and target != destination
+            ):
                 raise ValidationError("ZIP contains an unsafe file path.")
         archive.extractall(destination)
 
@@ -46,9 +49,15 @@ def extract_single_shapefile(zip_path, destination):
         raise ValidationError("ZIP must contain exactly one .shp file.")
 
     shp_path = shp_files[0]
-    missing = [suffix for suffix in (".dbf", ".shx") if not shp_path.with_suffix(suffix).exists()]
+    missing = [
+        suffix
+        for suffix in (".dbf", ".shx")
+        if not shp_path.with_suffix(suffix).exists()
+    ]
     if missing:
-        raise ValidationError(f"Shapefile is missing required companion file(s): {', '.join(missing)}.")
+        raise ValidationError(
+            f"Shapefile is missing required companion file(s): {', '.join(missing)}."
+        )
     return str(shp_path)
 
 
@@ -124,7 +133,7 @@ class Geoshp(models.Model):
     file = models.FileField(
         unique=True, upload_to="shapefiles/%Y/%m/%d", help_text="Upload a ZIP shapefile"
     )
-    uploaded_date = models.DateField(auto_now_add=True)
+    uploaded_date = models.DateField(auto_now_add=True, editable=False)
     project = models.ForeignKey(
         "Project",
         on_delete=models.SET_NULL,
