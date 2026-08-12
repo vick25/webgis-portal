@@ -10,7 +10,12 @@
   <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
     <ul class="divide-y divide-slate-100">
       {% for file in files %}
-        <li class="flex flex-wrap items-center justify-between gap-3 px-5 py-4"><div><p class="font-semibold text-slate-800">{{ file.name }}</p><p class="mt-1 text-sm text-slate-500">{{ file.description|default:"No description" }}</p></div><a class="text-sm font-semibold text-emerald-800 hover:underline" href="{{ file.file.url }}" target="_blank" rel="noopener">Download</a></li>
+        <li class="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+          <div>
+            <p class="font-semibold text-slate-800">{{ file.name }}</p>
+            <p class="mt-1 text-sm text-slate-500">{{ file.description|default:"No description" }}</p>
+          </div>
+          <a class="text-sm font-semibold text-emerald-800 hover:underline" href="{{ file.file.url }}" target="_blank" rel="noopener">Download</a></li>
       {% empty %}
         <li class="px-5 py-10 text-center text-slate-500">No datasets have been uploaded yet.</li>
       {% endfor %}
