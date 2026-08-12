@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from .forms import GeoshpForm
 from .models import Project
 from django.contrib.auth.decorators import login_required
+import mimetypes
 
 
 def index(request):
@@ -21,7 +22,12 @@ def map_view(request):
 @login_required
 def upload_shp(request):
     if request.method == "POST":
-        form = GeoshpForm(request.POST, request.FILES)
+        upload = request.FILES
+        mimetype, encoding = mimetypes.guess_type(upload["file"].name)
+        if mimetype != upload["file"].content_type:
+            raise TypeError("Mimetype doesn't match file extension.")
+
+        form = GeoshpForm(request.POST, upload)
         if form.is_valid():
             form.save()
             return redirect("file_list")

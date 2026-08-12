@@ -1,8 +1,11 @@
 import json
 
 from rest_framework import serializers
-
+from django.contrib.auth import get_user_model
+from django.contrib.auth import authenticate, login, logout
 from manager.models import Geoshp, Project, ShapefileFeature
+
+User = get_user_model()
 
 
 class LayerFeatureSerializer(serializers.ModelSerializer):
@@ -52,9 +55,56 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Project
-        fields = ("id", "name", "sigle", "description", "created_at", "updated_at", "layers")
+        fields = (
+            "id",
+            "name",
+            "sigle",
+            "description",
+            "created_at",
+            "updated_at",
+            "layers",
+        )
         read_only_fields = fields
 
     def get_layers(self, project):
         layers = project.geoshp_layers.all()
         return GeoshpSerializer(layers, many=True, context=self.context).data
+
+
+class RegistrationSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = User
+        fields = ("first_name", "last_name", "username", "email", "password")
+
+    def create(self, validated_data):
+        user = User.objects.create_user(
+            first_name=validated_data["first_name"],
+            last_name=validated_data["last_name"],
+            username=validated_data["username"],
+            email=validated_data["email"],
+            password=validated_data["password"],
+        )
+        return user
+
+
+class LoginSerializer(serializers.ModelSerializer):
+    username = serializers.CharField()
+    password = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = User
+        fields = ("username", "password")
+
+    def validate(self, data):
+        username = data.get("username")
+        password = data.get("password")
+
+        user = authenticate(username=username, password=password)
+        if user is None:
+            raise serializers.ValidationError("Invalid username or password.")
+
+        login(self.context.get("request"), user)
+        data["user"] = user
+        return data

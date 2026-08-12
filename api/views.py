@@ -1,12 +1,20 @@
 from django.db.models import Count, Prefetch
 from django.shortcuts import get_object_or_404
-from rest_framework import generics
+from rest_framework import generics, status
+from rest_framework.views import APIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
+from django.contrib.auth import logout
 
 from manager.models import Geoshp, Project, ShapefileFeature
 
-from .serializers import GeoshpSerializer, LayerFeatureSerializer, ProjectSerializer
+from .serializers import (
+    GeoshpSerializer,
+    LayerFeatureSerializer,
+    ProjectSerializer,
+    RegistrationSerializer,
+    LoginSerializer,
+)
 
 
 class ApiPagination(PageNumberPagination):
@@ -22,7 +30,9 @@ class ProjectListView(generics.ListAPIView):
     pagination_class = ApiPagination
 
     def get_queryset(self):
-        layer_queryset = Geoshp.objects.annotate(feature_count=Count("features")).order_by("name")
+        layer_queryset = Geoshp.objects.annotate(
+            feature_count=Count("features")
+        ).order_by("name")
         return Project.objects.prefetch_related(
             Prefetch("geoshp_layers", queryset=layer_queryset)
         ).order_by("name")
@@ -35,9 +45,11 @@ class GeoshpListView(generics.ListAPIView):
     pagination_class = ApiPagination
 
     def get_queryset(self):
-        queryset = Geoshp.objects.select_related("project").annotate(
-            feature_count=Count("features")
-        ).order_by("name")
+        queryset = (
+            Geoshp.objects.select_related("project")
+            .annotate(feature_count=Count("features"))
+            .order_by("name")
+        )
         project_id = self.request.query_params.get("project")
         if project_id:
             queryset = queryset.filter(project_id=project_id)
@@ -62,3 +74,36 @@ class LayerGeoJSONView(generics.GenericAPIView):
                 "features": serializer.data,
             }
         )
+
+
+class RegistrationView(APIView):
+    def post(self, request):
+        serializer = RegistrationSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            return Response(
+                {"message": f"User {user.username}, registered successfully."},
+                status=status.HTTP_201_CREATED,
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class LoginView(APIView):
+    def post(self, request):
+        serializer = LoginSerializer(data=request.data, context={"request": request})
+        if serializer.is_valid():
+            user = serializer.validated_data["user"]
+            return Response(
+                {
+                    "message": f"Login successful for user {user.username}.",
+                    "user_id": user.id,
+                },
+                status=status.HTTP_200_OK,
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class LogoutView(APIView):
+    def post(self, request):
+        logout(request)
+        return Response({"message": "Logout successful."}, status=status.HTTP_200_OK)
