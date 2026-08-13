@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from .forms import GeoshpForm
 from .models import Project
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 import mimetypes
 
 
@@ -20,6 +20,7 @@ def map_view(request):
 
 
 @login_required
+@permission_required("manager.add_geoshp", raise_exception=True)
 def upload_shp(request):
     if request.method == "POST":
         upload = request.FILES
@@ -31,8 +32,7 @@ def upload_shp(request):
         if form.is_valid():
             form.save()
             return redirect("file_list")
-    else:
-        form = GeoshpForm()
+    form = GeoshpForm()
     return render(request, "manager/uploadShp.html", {"form": form})
 
 
