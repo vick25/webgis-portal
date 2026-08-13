@@ -23,9 +23,9 @@
     zoomControl: false,
     layers: [osm],
     minZoom: 4,
-     maxBounds: bounds,
-     maxBoundsViscosity: 1.0,
-    }).setView([-3.47, 26.17], 5);
+    maxBounds: bounds,
+    maxBoundsViscosity: 1.0,
+  }).setView([-3.47, 26.17], 5);
   const layerControl = L.control
     .layers(
       { OpenStreetMap: osm, "World Imagery": imagery },
@@ -227,6 +227,7 @@
       loadMoreButton.disabled = false;
     }
   }
+
   loadMoreButton.addEventListener("click", loadProjects);
   addReferenceLayers();
   loadProjects();

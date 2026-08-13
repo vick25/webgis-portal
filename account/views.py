@@ -3,9 +3,8 @@ from .forms import CustomUserCreationForm
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 
+
 # Register View
-
-
 def register(request):
     if request.method == "POST":
         form = CustomUserCreationForm(request.POST)
@@ -24,6 +23,10 @@ def register(request):
 
 # Login View
 def login_view(request):
+    if request.user.is_authenticated:
+        return redirect(
+            "manager_index"
+        )  # Redirect authenticated users to the index template view.
     if request.method == "POST":
         username = request.POST["username"]
         password = request.POST["password"]
