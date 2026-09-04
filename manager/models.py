@@ -133,6 +133,16 @@ class Geoshp(models.Model):
     file = models.FileField(
         unique=True, upload_to="shapefiles/%Y/%m/%d", help_text="Upload a ZIP shapefile"
     )
+    # is to be shown unto base maps
+    is_base_layer = models.BooleanField(
+        default=False,
+        help_text="Check if this layer should be displayed on the base map",
+    )
+    # is to be made available
+    is_available = models.BooleanField(
+        default=True,
+        help_text="Check if this layer should be available for use in the application",
+    )
     uploaded_date = models.DateField(auto_now_add=True, editable=False)
     project = models.ForeignKey(
         "Project",

@@ -29,8 +29,19 @@ class FeatureInline(admin.TabularInline):
 
 class GeoshpAdmin(LeafletGeoAdmin):
     date_hierarchy = "uploaded_date"
-    list_display = ("name", "project", "file", "uploaded_date")
+    list_display = (
+        "name",
+        "project",
+        "file",
+        "is_base_layer",
+        "is_available",
+        "uploaded_date",
+    )
     list_filter = ("project", "uploaded_date")
+    list_editable = (
+        "is_base_layer",
+        "is_available",
+    )
     search_fields = ("name",)
     inlines = [FeatureInline]  # Inlines nested perfectly under Leaflet view
 
