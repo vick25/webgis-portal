@@ -28,6 +28,7 @@ class ProjectListView(generics.ListAPIView):
 
     serializer_class = ProjectSerializer
     pagination_class = ApiPagination
+    filterset_fields = {"name": ["icontains"], "sigle": []}
 
     def get_queryset(self):
         layer_queryset = Geoshp.objects.annotate(
