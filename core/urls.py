@@ -17,7 +17,7 @@ Including another URLconf
 
 from django.conf import settings
 from django.conf.urls.static import static
-from django.contrib import admin
+from django.contrib import admin, auth
 from django.urls import path, include
 from account.views import login_view, logout_view, register
 
@@ -28,6 +28,19 @@ urlpatterns = [
     path("register/", register, name="register"),
     path("login/", login_view, name="login"),
     path("logout/", logout_view, name="logout"),
+    path(
+        "accounts/", include(("django.contrib.auth.urls", "auth"), namespace="accounts")
+    ),
+    path(
+        "accounts/password_reset/done/",
+        auth.views.PasswordResetDoneView.as_view(),
+        name="password_reset_done",
+    ),
+    path(
+        "accounts/reset/done/",
+        auth.views.PasswordResetCompleteView.as_view(),
+        name="password_reset_complete",
+    ),
 ]
 
 if settings.DEBUG:
